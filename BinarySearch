@@ -1,0 +1,297 @@
+#pragma once
+#include<queue>
+#include<stack>
+
+template<class T>
+struct BinaryTreeNode
+{
+	BinaryTreeNode<T>* _left;
+	BinaryTreeNode<T>* _right;
+    T _data;
+
+	BinaryTreeNode(const T& x)
+		:_left(NULL)
+		,_right(NULL)
+		,_data(x)
+	{}
+};   
+
+template<class T>
+class BinaryTree
+{
+   typedef BinaryTreeNode<T> Node;
+public:
+	BinaryTree()
+		:_root(NULL)
+	{}
+	BinaryTree(T* a,size_t n,const T& invalid)
+	{
+	    size_t index = 0;
+		_root = CreateTree(a,n,invalid,index);
+	}
+
+	Node* _Copy(Node* root)
+	{
+	   if(_root == NULL)
+		   return 0;
+	   Node* newRoot = new Node(root->_data);
+	   newRoot->_left = _Copy(root->_left);
+	   newRoot->_right = _Copy(root->_right);
+	   return newRoot;
+	}
+
+	BinaryTree(const BinaryTree<T>& t)
+	{
+	   _root = _Copy(t._root);
+	}
+
+	BinaryTree<T>& operator=(BinaryTree<T>& t)
+	{
+		swap(_root,t._root);
+		return *this;
+	}
+
+	~BinaryTree()
+	{
+	    Destroy(_root);
+	}
+
+	void Destroy(Node* root)
+	{
+	   if(root == NULL)
+		   return;
+	   Destroy(root->_left);
+	   Destroy(root->_right);
+	   delete root;
+	}
+
+	void PrevOrder() //前序排列
+	{
+		_PrevOrder(_root);
+		cout<<endl;
+	}
+
+	void PrevOrderNonR()//非递归
+	{
+	   stack<Node*> s;
+	   Node* cur = _root;
+
+	   while(cur || !s.empty())
+	   {
+	      while(cur)
+		  {
+		     cout<<cur->_data<<" ";
+			 s.push(cur);
+			 cur = cur->_left;
+		  }
+
+		  Node* top = s.top();
+		  s.pop();
+		  //子问题的方式访问右数
+		  cur = top->_right;
+	   }
+	   cout<<endl;
+	}
+
+	void InOrder() //中序排列
+	{
+	   _InOrder(_root);
+	   cout<<endl;
+	}
+
+	void InOrderNonR()
+	{
+	   Node* cur = _root;
+	   stack<Node*> s;
+
+	   while(cur || !empty())
+	   {
+	      while(cur)
+		  {
+		     s.push(cur);
+			 cur = cur->_left;
+		  }
+		  Node* top = s.top();
+		  s.pop();
+		  cout<<top->_data<<" ";
+		  //子问题
+		  cur = top->_right;
+	   }
+	}
+
+	void PostOrderNonR()
+	{
+	    Node* cur = _root;
+		stack<Node*> s;
+		Node* prev = NULL;
+
+		while(cur || !s.empty)
+		{
+		   while(cur)
+		   {
+		      s.push();
+			  cur = cur->_left;
+		   }
+
+		   Node* front = s.top();
+		   if(front->_right == NULL || front->_right == prev)
+		   {
+		      cout<<front->_data<<" ";
+			  prev = front;
+			  s.pop();
+		   }
+		   else
+		   {
+		      cur = front->_right; //子问题
+		   }
+		}
+		cout<<endl;
+	}
+
+	void LevelOrder()  //层序排列
+	{
+	   queue<Node*> q;
+	   if(_root)
+		   q.push(_root);
+
+	   while(!q.empty())
+	   {
+	      Node* front = q.front();
+		  cout<<front->_data<<" ";
+		  if(front->_left)
+			  q.push(front->_left);
+		  if(front->_right)
+			  q.push(front->_right);
+
+		  q.pop();
+	   }
+	   cout<<endl;
+	}
+
+	size_t Size()
+	{
+	   return _Size(_root);
+	}
+
+	size_t LeafSize()
+	{
+	   return _LeafSize(_root);
+	}
+
+	size_t GetKLevel(size_t k)
+	{
+	   assert(k > 0);
+	   return _GetKLevel(_root,k);
+	}
+
+	size_t Depth()
+	{
+	   return _Depth(_root);
+	}
+
+	Node* Find(const T& x)
+	{
+	   return _Find(_root,x);
+	}
+
+protected:
+	Node* _Find(Node* root,const T& x)
+	{
+	   if(root == NULL)
+		   return NULL;
+	   if(root->_data == x)
+	       return root;
+
+	   Node* ret = _Find(root->_left,x);
+	   if(ret)
+	   {
+	      return ret;
+	   }
+	   return _Find(root->_right,x);
+	}
+
+	 size_t _Depth(Node* root)
+	 {
+	    if(root == NULL)
+		    return 0;
+		if(root->_left == NULL && root->_right == NULL)
+			return 1;
+		size_t left = _Depth(root->_left);
+		size_t right = _Depth(root->_right);
+		return left>right?left+1:right+1;
+	 }
+
+	 size_t _GetKLevel(Node* root,size_t k)//k层节点的个数
+	 {
+	    if(root == NULL)
+		   return 0;
+		if(k == 1)
+			return 1;
+		return _GetKLevel(root->_left,k-1)\
+			+_GetKLevel(root->_right,k-1);
+	 }
+
+	 size_t _LeafSize(Node* root)
+	 {
+	    if(root == NULL)
+			return 0;
+	 
+	    if(root->_left == NULL && root->_right == NULL)
+	     {
+	        return 1;
+	     }
+	    return _LeafSize(root->_left)+_LeafSize(root->_right);
+	 }
+
+	 void _InOrder(Node* root)
+	 {
+	    if(root == NULL)
+			return;
+		_InOrder(root->_left);
+		cout<<root->_data<<" ";
+		_InOrder(root->_right);
+	 }
+
+	 size_t _Size(Node* root)
+	 {
+	    if(root == NULL)
+			return 0;
+		return _Size(root->_left)+_Size(root->_right)+1;
+	 }
+
+	 void _PrevOrder(Node* root)
+	 {
+	    if(root == NULL)
+			return;
+		cout<<root->_data<<" ";
+		_PrevOrder(root->_left);
+		_PrevOrder(root->_right);
+	 }
+
+	 Node* CreateTree(T* a,size_t n,const T& invalid,size_t& index)
+	 {
+	     Node* root = NULL;
+		 if(index<n && a[index]!=invalid)
+		 {
+		    root = new Node(a[index]);
+			root->_left = CreateTree(a,n,invalid,++index);
+			root->_right = CreateTree(a,n,invalid,++index);
+		 }
+		 return root;
+	 }
+
+protected:
+	Node* _root;
+};
+
+void TestBinaryTree()
+{
+	int array[10] = {1,2,3,'#','#',4,'#','#',5,6};
+	BinaryTree<int> t1(array,sizeof(array)/sizeof(array[0]),'#');
+	t1.PrevOrder();
+	cout<<t1.GetKLevel(3)<<endl;
+
+	//BinaryTree<int> t2(t1);
+//	t2.prevOrderNonR();
+	
+}
